@@ -1607,8 +1607,8 @@ def _welford_combine(mean_1, m2_1, weight_1, mean_2, m2_2, weight_2):
 
 layouts = [
     BlockedLayout([1, 4], [1, 32], [4, 1], [1, 0]),
-    BlockedLayout([1, 4], [1, 32], [2, 2], [1, 0]),
-    BlockedLayout([1, 4], [1, 32], [1, 4], [1, 0]),
+    BlockedLayout([1, 1], [1, 32], [2, 2], [1, 0]),
+    BlockedLayout([1, 1], [1, 32], [1, 4], [1, 0]),
     BlockedLayout([1, 4], [8, 4], [2, 2], [0, 1])
 ]
 
@@ -1654,12 +1654,13 @@ def test_chain_reduce(M, N, src_layout, device='cuda'):
         kernel = triton.compile(f.name)
 
     rs = RandomState(17)
-    x = rs.randint(0, 4, (M, N)).astype('int32')
+    # x = rs.randint(0, 4, (M, N)).astype('int32')
+    x = [[j * N + i for i in range(N)] for j in range(M)]
 
     z = np.zeros((1,)).astype('int32')
 
-    x_tri = torch.tensor(x, device=device)
-    z_tri = torch.tensor(z, device=device)
+    x_tri = torch.tensor(x, dtype=torch.int32, device=device)
+    z_tri = torch.tensor(z, dtype=torch.int32, device=device)
 
     pgm = kernel[(1, 1, 1)](x_tri, z_tri)
     z_ref = np.sum(x)
