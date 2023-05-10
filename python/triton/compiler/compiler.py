@@ -361,7 +361,7 @@ def add_cuda_stages(arch, extern_libs, stages):
                        lambda src: ptx_to_cubin(src, arch))
 
 
-def compile(fn, **kwargs):
+def compile_artifacts(fn, **kwargs):
     arch = get_architecture_descriptor(kwargs.get("cc", None))
     is_cuda = _is_cuda(arch)
     context = _triton.ir.context()
@@ -498,7 +498,12 @@ def compile(fn, **kwargs):
         metadata_group[metadata_filename] = fn_cache_manager.put(json.dumps(metadata), metadata_filename, binary=False)
         fn_cache_manager.put_group(metadata_filename, metadata_group)
 
-    # return handle to compiled kernel
+    # return the compilation artifacts
+    return (fn, so_path, metadata, asm)
+
+def compile(fn, **kwargs):
+    fn, so_path, metadata, asm = compile_artifacts(fn, **kwargs)
+    # load the kernel and return a handle
     return CompiledKernel(fn, so_path, metadata, asm)
 
 
